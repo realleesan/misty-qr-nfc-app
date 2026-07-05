@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Plus, Download, Edit, Trash2, Copy, ExternalLink } from 'lucide-react';
 import { qrService } from '../services/qrService';
+import { venuesService } from '../services/venuesService';
 
 export default function QRCodes() {
   const [qrCodes, setQRCodes] = useState([]);
+  const [venues, setVenues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingQR, setEditingQR] = useState(null);
@@ -13,10 +15,21 @@ export default function QRCodes() {
     description: '',
     redirect_url: ''
   });
+  const [error, setError] = useState('');
 
   useEffect(() => {
     loadQRCodes();
+    loadVenues();
   }, []);
+
+  const loadVenues = async () => {
+    try {
+      const data = await venuesService.list();
+      setVenues(data.venues || []);
+    } catch (error) {
+      console.error('Failed to load venues:', error);
+    }
+  };
 
   const loadQRCodes = async () => {
     try {
@@ -32,6 +45,7 @@ export default function QRCodes() {
   const handleCreate = () => {
     setEditingQR(null);
     setFormData({ venue_id: '', name: '', description: '', redirect_url: '' });
+    setError('');
     setShowModal(true);
   };
 
@@ -43,6 +57,7 @@ export default function QRCodes() {
       description: qr.description || '',
       redirect_url: qr.redirect_url
     });
+    setError('');
     setShowModal(true);
   };
 
@@ -74,6 +89,7 @@ export default function QRCodes() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     try {
       if (editingQR) {
         await qrService.update(editingQR.id, formData);
@@ -84,7 +100,8 @@ export default function QRCodes() {
       loadQRCodes();
     } catch (error) {
       console.error('Failed to save QR code:', error);
-      alert('Failed to save QR code');
+      const message = error.response?.data?.error || error.response?.data?.message || 'Failed to save QR code';
+      setError(message);
     }
   };
 
@@ -183,16 +200,31 @@ export default function QRCodes() {
               {editingQR ? 'Edit QR Code' : 'Create QR Code'}
             </h2>
             
+            {error && (
+              <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                {error}
+              </div>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Venue ID</label>
-                <input
-                  type="text"
+                <label className="block text-sm font-medium text-gray-700 mb-1">Venue</label>
+                <select
                   value={formData.venue_id}
                   onChange={(e) => setFormData({ ...formData, venue_id: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
-                />
+                >
+                  <option value="">Select a venue</option>
+                  {venues.map((venue) => (
+                    <option key={venue.id} value={venue.id}>
+                      {venue.name}
+                    </option>
+                  ))}
+                </select>
+                {venues.length === 0 && (
+                  <p className="mt-1 text-xs text-gray-500">No venues found. Please create a venue first.</p>
+                )}
               </div>
               
               <div>
