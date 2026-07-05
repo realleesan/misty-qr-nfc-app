@@ -2,8 +2,17 @@ import api from './api';
 
 export const venuesService = {
   async list() {
-    const response = await api.get('/api/qr-nfc/venues');
-    return response.data;
+    try {
+      const response = await api.get('/api/qr-nfc/venues');
+      return response.data;
+    } catch (error) {
+      console.error('venuesService.list failed:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+      throw error;
+    }
   },
 
   async get(id) {

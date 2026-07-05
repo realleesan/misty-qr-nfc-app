@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>QR-NFC API Test</title>
+</head>
+<body>
+  <h1>QR-NFC API Test</h1>
+  <button id="testBtn">Test GET /api/qr-nfc/venues with token</button>
+  <pre id="output"></pre>
+
+  <script>
+    const output = document.getElementById('output');
+    const token = localStorage.getItem('token');
+
+    document.getElementById('testBtn').addEventListener('click', async () => {
+      output.textContent = 'Loading...';
+      try {
+        const res = await fetch('https://qr-nfc-api.onrender.com/api/qr-nfc/venues', {
+          headers: {
+            'Authorization': token ? `Bearer ${token}` : 'NO_TOKEN'
+          }
+        });
+        const text = await res.text();
+        output.textContent = 'Status: ' + res.status + '\n\n' + text;
+      } catch (e) {
+        output.textContent = 'Error: ' + e.message;
+      }
+    });
+  </script>
+</body>
+</html>
