@@ -105,7 +105,7 @@ export default function Reviews() {
             <p className="text-2xl font-bold text-green-600">{stats.positive_reviews}</p>
           </div>
           <div className="bg-white p-4 rounded-lg shadow">
-            <p className="text-sm text-gray-600">Phản hồi nội bộ (<4)</p>
+              <p className="text-sm text-gray-600">Phản hồi nội bộ ({"<"}4)</p>
             <p className="text-2xl font-bold text-red-600">{stats.negative_reviews}</p>
           </div>
         </div>
