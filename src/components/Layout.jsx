@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, QrCode, BarChart3, Settings, LogOut, Menu, X } from 'lucide-react'
+import { LayoutDashboard, QrCode, BarChart3, MessageSquare, Settings, LogOut, Menu, X } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 
@@ -16,6 +16,7 @@ export default function Layout() {
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/qr-codes', icon: QrCode, label: 'QR Codes' },
     { path: '/analytics', icon: BarChart3, label: 'Analytics' },
+    ...(user?.role === 'owner' ? [{ path: '/reviews', icon: MessageSquare, label: 'Reviews' }] : []),
     { path: '/settings', icon: Settings, label: 'Settings' },
   ]
 
