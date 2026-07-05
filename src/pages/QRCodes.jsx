@@ -141,9 +141,16 @@ export default function QRCodes() {
             <div key={qr.id} className="bg-white p-6 rounded-lg shadow">
               <div className="flex justify-between items-start mb-4">
                 <h3 className="text-lg font-semibold text-gray-800">{qr.name}</h3>
-                <span className={`px-2 py-1 text-xs rounded ${qr.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                  {qr.is_active ? 'Active' : 'Inactive'}
-                </span>
+                <div className="flex gap-1">
+                  <span className={`px-2 py-1 text-xs rounded ${qr.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                    {qr.is_active ? 'Active' : 'Inactive'}
+                  </span>
+                  {qr.redirect_url ? (
+                    <span className="px-2 py-1 text-xs rounded bg-blue-100 text-blue-800">Configured</span>
+                  ) : (
+                    <span className="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-800">Blank</span>
+                  )}
+                </div>
               </div>
               
               {qr.qr_image_url && (
@@ -156,6 +163,16 @@ export default function QRCodes() {
                 <p><strong>Code:</strong> {qr.code}</p>
                 <p><strong>Scans:</strong> {qr.scan_count}</p>
                 {qr.description && <p><strong>Description:</strong> {qr.description}</p>}
+                <p>
+                  <strong>URL:</strong>{' '}
+                  {qr.redirect_url ? (
+                    <a href={qr.redirect_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all">
+                      {qr.redirect_url}
+                    </a>
+                  ) : (
+                    <span className="text-gray-400 italic">Not configured (blank QR card)</span>
+                  )}
+                </p>
               </div>
               
               <div className="flex flex-wrap gap-2">
@@ -173,21 +190,23 @@ export default function QRCodes() {
                   <Download className="w-4 h-4 mr-1" />
                   Download
                 </button>
-                <a
-                  href={qr.redirect_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
-                >
-                  <ExternalLink className="w-4 h-4 mr-1" />
-                  Test
-                </a>
+                {qr.redirect_url && (
+                  <a
+                    href={qr.redirect_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                  >
+                    <ExternalLink className="w-4 h-4 mr-1" />
+                    Test
+                  </a>
+                )}
                 <button
                   onClick={() => handleEdit(qr)}
                   className="flex items-center px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
                 >
                   <Edit className="w-4 h-4 mr-1" />
-                  Edit
+                  Configure
                 </button>
                 <button
                   onClick={() => handleDelete(qr.id)}
@@ -206,7 +225,7 @@ export default function QRCodes() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg w-full max-w-md">
             <h2 className="text-xl font-bold mb-4">
-              {editingQR ? 'Edit QR Code' : 'Create QR Code'}
+              {editingQR ? (formData.redirect_url ? 'Edit QR Code' : 'Configure QR Code') : 'Create QR Code'}
             </h2>
             
             {error && (
@@ -273,13 +292,13 @@ export default function QRCodes() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Redirect URL</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Redirect URL <span className="text-gray-400">(optional)</span></label>
                 <input
                   type="url"
                   value={formData.redirect_url}
                   onChange={(e) => setFormData({ ...formData, redirect_url: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
+                  placeholder="https://example.com (leave blank for blank QR card)"
                 />
               </div>
               
@@ -288,7 +307,7 @@ export default function QRCodes() {
                   type="submit"
                   className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
                 >
-                  {editingQR ? 'Update' : 'Create'}
+                  {editingQR ? (formData.redirect_url ? 'Update' : 'Configure URL') : 'Create'}
                 </button>
                 <button
                   type="button"
