@@ -5,27 +5,91 @@
 </head>
 <body>
   <h1>QR-NFC API Test</h1>
-  <button id="testBtn">Test GET /api/qr-nfc/venues with token</button>
-  <pre id="output"></pre>
+  <button id="testBtn">Run Full Diagnosis</button>
+  <pre id="output" style="background:#f5f5f5;padding:10px;"></pre>
 
   <script>
     const output = document.getElementById('output');
-    const token = localStorage.getItem('token');
 
-    document.getElementById('testBtn').addEventListener('click', async () => {
-      output.textContent = 'Loading...';
-      try {
-        const res = await fetch('https://qr-nfc-api.onrender.com/api/qr-nfc/venues', {
-          headers: {
-            'Authorization': token ? `Bearer ${token}` : 'NO_TOKEN'
-          }
-        });
-        const text = await res.text();
-        output.textContent = 'Status: ' + res.status + '\n\n' + text;
-      } catch (e) {
-        output.textContent = 'Error: ' + e.message;
+    function show(text) {
+      output.textContent += text + '\n';
+    }
+
+    async function runTests() {
+      output.textContent = 'Running diagnosis...\n';
+      const token = localStorage.getItem('token');
+
+      show('Token loaded: ' + (token ? 'YES' : 'NO'));
+      if (!token) {
+        show('No token found! Please login first.');
+        return;
       }
-    });
+
+      const headers = {
+        'Authorization': 'Bearer ' + token
+      };
+
+      try {
+        show('\n=== 1. Current User Info (/api/qr-nfc/auth/me) ===');
+        const meRes = await fetch('https://qr-nfc-api.onrender.com/api/qr-nfc/auth/me', {
+          headers: headers
+        });
+        const meData = await meRes.json();
+        show('Status: ' + meRes.status);
+        show(JSON.stringify(meData, null, 2));
+
+        const userId = meData.user?.id;
+
+        if (!userId) {
+          show('\nCannot get user ID. Aborting further tests.');
+          return;
+        }
+
+        show('\n=== 2. Venues List (/api/qr-nfc/venues) ===');
+        const venuesRes = await fetch('https://qr-nfc-api.onrender.com/api/qr-nfc/venues', {
+          headers: headers
+        });
+        const venuesData = await venuesRes.json();
+        show('Status: ' + venuesRes.status);
+        show(JSON.stringify(venuesData, null, 2));
+
+        if (venuesData.venues.length === 0) {
+          show('\nNo venues found! Try creating one via /settings or via the API.');
+          show('Trying to create a test venue now...');
+
+          const createRes = await fetch('https://qr-nfc-api.onrender.com/api/qr-nfc/venues', {
+            method: 'POST',
+            headers: {
+              ...headers,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              name: 'Debug Test Venue ' + Date.now(),
+              address: 'Test Street',
+              city: 'Hanoi',
+              country: 'Vietnam'
+            })
+          });
+          const createData = await createRes.json();
+          show('Create venue status: ' + createRes.status);
+          show(JSON.stringify(createData, null, 2));
+
+          if (createRes.status === 201) {
+            show('\nRefetching venues after creation...');
+            const refetchRes = await fetch('https://qr-nfc-api.onrender.com/api/qr-nfc/venues', {
+              headers: headers
+            });
+            const refetchData = await refetchRes.json();
+            show('Status: ' + refetchRes.status);
+            show(JSON.stringify(refetchData, null, 2));
+          }
+        }
+      } catch (e) {
+        show('Error: ' + e.message);
+      }
+    }
+
+    document.getElementById('testBtn').addEventListener('click', runTests);
   </script>
 </body>
 </html>
