@@ -7,6 +7,7 @@ export default function QRCodes() {
   const [qrCodes, setQRCodes] = useState([]);
   const [venues, setVenues] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [venuesLoading, setVenuesLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingQR, setEditingQR] = useState(null);
   const [formData, setFormData] = useState({
@@ -16,6 +17,7 @@ export default function QRCodes() {
     redirect_url: ''
   });
   const [error, setError] = useState('');
+  const [venuesError, setVenuesError] = useState('');
 
   useEffect(() => {
     loadQRCodes();
@@ -23,11 +25,18 @@ export default function QRCodes() {
   }, []);
 
   const loadVenues = async () => {
+    setVenuesLoading(true);
+    setVenuesError('');
     try {
       const data = await venuesService.list();
       setVenues(data.venues || []);
     } catch (error) {
       console.error('Failed to load venues:', error);
+      const message = error.response?.data?.error || error.response?.data?.message || 'Failed to load venues';
+      setVenuesError(message);
+      setVenues([]);
+    } finally {
+      setVenuesLoading(false);
     }
   };
 
@@ -208,7 +217,9 @@ export default function QRCodes() {
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Venue</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Venue {venuesLoading && <span className="text-gray-400">(loading...)</span>}
+                </label>
                 <select
                   value={formData.venue_id}
                   onChange={(e) => setFormData({ ...formData, venue_id: e.target.value })}
@@ -222,8 +233,21 @@ export default function QRCodes() {
                     </option>
                   ))}
                 </select>
-                {venues.length === 0 && (
+                {venues.length === 0 && !venuesLoading && (
                   <p className="mt-1 text-xs text-gray-500">No venues found. Please create a venue first.</p>
+                )}
+                {venuesError && (
+                  <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                    <p className="font-semibold">Failed to load venues:</p>
+                    <p>{venuesError}</p>
+                    <button 
+                      type="button"
+                      onClick={loadVenues}
+                      className="mt-1 underline text-red-800"
+                    >
+                      Retry
+                    </button>
+                  </div>
                 )}
               </div>
               
