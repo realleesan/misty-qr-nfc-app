@@ -32,6 +32,12 @@ export function AuthProvider({ children }) {
       setIsAuthenticated(true);
       return { success: true };
     } catch (error) {
+      if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
+        return { success: false, error: 'Máy chủ phản hồi quá chậm. Vui lòng thử lại sau.' };
+      }
+      if (!error.response) {
+        return { success: false, error: 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.' };
+      }
       return { 
         success: false, 
         error: error.response?.data?.error || 'Login failed' 
@@ -48,6 +54,12 @@ export function AuthProvider({ children }) {
       setIsAuthenticated(true);
       return { success: true };
     } catch (error) {
+      if (error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
+        return { success: false, error: 'Máy chủ phản hồi quá chậm. Vui lòng thử lại sau.' };
+      }
+      if (!error.response) {
+        return { success: false, error: 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.' };
+      }
       return { 
         success: false, 
         error: error.response?.data?.error || 'Registration failed' 
