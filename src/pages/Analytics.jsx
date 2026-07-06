@@ -22,7 +22,7 @@ export default function Analytics() {
       
       setScanData(scans.scans || []);
       setReviewData(reviews.ratings || []);
-      setAverageRating(reviews.average_rating || 0);
+      setAverageRating(parseFloat(reviews.average_rating) || 0);
     } catch (error) {
       console.error('Failed to load analytics:', error);
     } finally {
